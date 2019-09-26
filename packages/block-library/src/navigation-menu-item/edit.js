@@ -41,6 +41,7 @@ function NavigationMenuItemEdit( {
 	isSelected,
 	isParentOfSelectedBlock,
 	setAttributes,
+	blockMover,
 } ) {
 	const plainTextRef = useRef( null );
 	const onEditLableClicked = useCallback(
@@ -62,6 +63,7 @@ function NavigationMenuItemEdit( {
 					aria-label={ __( 'Navigation Label' ) }
 					maxRows={ 1 }
 				/>
+				{ blockMover }
 				<Dropdown
 					contentClassName="wp-block-navigation-menu-item__dropdown-content"
 					position="bottom left"
