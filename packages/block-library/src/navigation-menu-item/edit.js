@@ -1,7 +1,6 @@
 /**
  * External dependencies
  */
-import { invoke } from 'lodash';
 import classnames from 'classnames';
 
 /**
@@ -9,47 +8,73 @@ import classnames from 'classnames';
  */
 import { withSelect } from '@wordpress/data';
 import {
-	Dropdown,
 	ExternalLink,
-	IconButton,
 	PanelBody,
 	TextareaControl,
 	TextControl,
+	Toolbar,
 	ToggleControl,
+	ToolbarButton,
 } from '@wordpress/components';
+import {
+	LEFT,
+	RIGHT,
+	UP,
+	DOWN,
+	BACKSPACE,
+	ENTER,
+} from '@wordpress/keycodes';
 import { __ } from '@wordpress/i18n';
 import {
+	BlockControls,
 	InnerBlocks,
 	InspectorControls,
 	PlainText,
+	URLPopover,
 } from '@wordpress/block-editor';
 import {
 	Fragment,
-	useCallback,
 	useRef,
+	useState,
 } from '@wordpress/element';
-
-/**
- * Internal dependencies
- */
-import MenuItemActions from './menu-item-actions';
-const POPOVER_PROPS = { noArrow: true };
 
 function NavigationMenuItemEdit( {
 	attributes,
-	clientId,
 	isSelected,
 	isParentOfSelectedBlock,
 	setAttributes,
 } ) {
 	const plainTextRef = useRef( null );
-	const onEditLableClicked = useCallback(
-		( onClose ) => () => {
-			onClose();
-			invoke( plainTextRef, [ 'current', 'textarea', 'focus' ] );
-		},
-		[ plainTextRef ]
-	);
+	const [ isLinkOpen, setIsLinkOpen ] = useState( false );
+	const [ isEditingLink, setIsEditingLink ] = useState( false );
+	const [ urlInput, setUrlInput ] = useState( null );
+
+	const inputValue = urlInput !== null ? urlInput : url;
+
+	const onKeyDown = ( event ) => {
+		if ( [ LEFT, DOWN, RIGHT, UP, BACKSPACE, ENTER ].indexOf( event.keyCode ) > -1 ) {
+			// Stop the key event from propagating up to ObserveTyping.startTypingInTextField.
+			event.stopPropagation();
+		}
+	};
+
+	const closeURLPopover = () => {
+		setIsEditingLink( false );
+		setUrlInput( null );
+		setIsLinkOpen( false );
+	};
+
+	const autocompleteRef = useRef( null );
+
+	const onFocusOutside = ( event ) => {
+		const autocompleteElement = autocompleteRef.current;
+		if ( autocompleteElement && autocompleteElement.contains( event.target ) ) {
+			return;
+		}
+		closeURLPopover();
+	};
+
+	const { label, url } = attributes;
 	let content;
 	if ( isSelected ) {
 		content = (
@@ -57,30 +82,10 @@ function NavigationMenuItemEdit( {
 				<PlainText
 					ref={ plainTextRef }
 					className="wp-block-navigation-menu-item__field"
-					value={ attributes.label }
-					onChange={ ( label ) => setAttributes( { label } ) }
+					value={ label }
+					onChange={ ( labelValue ) => setAttributes( { label: labelValue } ) }
 					aria-label={ __( 'Navigation Label' ) }
 					maxRows={ 1 }
-				/>
-				<Dropdown
-					contentClassName="wp-block-navigation-menu-item__dropdown-content"
-					position="bottom left"
-					popoverProps={ POPOVER_PROPS }
-					renderToggle={ ( { isOpen, onToggle } ) => (
-						<IconButton
-							icon={ isOpen ? 'arrow-up-alt2' : 'arrow-down-alt2' }
-							label={ __( 'More options' ) }
-							onClick={ onToggle }
-							aria-expanded={ isOpen }
-						/>
-					) }
-					renderContent={ ( { onClose } ) => (
-						<MenuItemActions
-							clientId={ clientId }
-							destination={ attributes.destination }
-							onEditLableClicked={ onEditLableClicked( onClose ) }
-						/>
-					) }
 				/>
 			</div>
 		);
@@ -92,6 +97,43 @@ function NavigationMenuItemEdit( {
 
 	return (
 		<Fragment>
+			<BlockControls>
+				<Toolbar>
+					<ToolbarButton
+						name="link"
+						icon="admin-links"
+						title={ __( 'Link' ) }
+						onClick={ () => setIsLinkOpen( ! isLinkOpen ) }
+					/>
+					{ isLinkOpen &&
+					<>
+						<URLPopover
+							className="wp-block-navigation-menu-item__inline-link-input"
+							onClose={ closeURLPopover }
+							onFocusOutside={ onFocusOutside }
+						>
+							{ ( ! url || isEditingLink ) &&
+							<URLPopover.LinkEditor
+								value={ inputValue }
+								onChangeInputValue={ setUrlInput }
+								onKeyPress={ ( event ) => event.stopPropagation() }
+								onKeyDown={ onKeyDown }
+								onSubmit={ ( event ) => event.preventDefault() }
+								autocompleteRef={ autocompleteRef }
+							/>
+							}
+							{ ( url && ! isEditingLink ) &&
+								<URLPopover.LinkViewer
+									onKeyPress={ ( event ) => event.stopPropagation() }
+									url={ url }
+								/>
+							}
+
+						</URLPopover>
+					</>
+					}
+				</Toolbar>
+			</BlockControls>
 			<InspectorControls>
 				<PanelBody
 					title={ __( 'Menu Settings' ) }
