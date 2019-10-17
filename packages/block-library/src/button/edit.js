@@ -30,6 +30,7 @@ import {
 	withColors,
 	PanelColorSettings,
 	__experimentalGradientPickerControl,
+	__experimentalUseGradient,
 } from '@wordpress/block-editor';
 
 const { getComputedStyle } = window;
@@ -94,7 +95,6 @@ function ButtonEdit( {
 		text,
 		title,
 		url,
-		customGradient,
 	} = attributes;
 	const onSetLinkRel = useCallback(
 		( value ) => {
@@ -121,6 +121,11 @@ function ButtonEdit( {
 		},
 		[ rel, setAttributes ]
 	);
+	const {
+		gradientClass,
+		gradientValue,
+		setGradient,
+	} = __experimentalUseGradient( attributes, setAttributes );
 
 	const linkId = `wp-block-button__inline-link-${ instanceId }`;
 	return (
@@ -132,16 +137,17 @@ function ButtonEdit( {
 				withoutInteractiveFormatting
 				className={ classnames(
 					'wp-block-button__link', {
-						'has-background': backgroundColor.color || customGradient,
-						[ backgroundColor.class ]: ! customGradient && backgroundColor.class,
+						'has-background': backgroundColor.color || gradientValue,
+						[ backgroundColor.class ]: ! gradientValue && backgroundColor.class,
 						'has-text-color': textColor.color,
 						[ textColor.class ]: textColor.class,
+						[ gradientClass ]: gradientClass,
 						'no-border-radius': borderRadius === 0,
 					}
 				) }
 				style={ {
-					backgroundColor: ! customGradient && backgroundColor.color,
-					background: customGradient,
+					backgroundColor: ! gradientValue && backgroundColor.color,
+					background: ! backgroundColor.color && gradientValue,
 					color: textColor.color,
 					borderRadius: borderRadius ? borderRadius + 'px' : undefined,
 				} }
@@ -199,14 +205,11 @@ function ButtonEdit( {
 					<__experimentalGradientPickerControl
 						onChange={
 							( newGradient ) => {
-								setAttributes( {
-									customGradient: newGradient,
-									backgroundColor: undefined,
-									customBackgroundColor: undefined,
-								} );
+								setGradient( newGradient );
+								setBackgroundColor();
 							}
 						}
-						value={ customGradient }
+						value={ gradientValue }
 					/>
 				</PanelBody>
 				<BorderPanel
