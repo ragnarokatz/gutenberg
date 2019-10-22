@@ -36,6 +36,7 @@ import LinkControlInputSearch from './input-search';
 
 function LinkControl( {
 	currentLink,
+	className,
 	fetchSearchSuggestions,
 	onClose = noop,
 	onKeyDown = noop,
