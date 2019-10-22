@@ -37,6 +37,7 @@ import LinkControlInputSearch from './input-search';
 function LinkControl( {
 	currentLink,
 	fetchSearchSuggestions,
+	onClose = noop,
 	onKeyDown = noop,
 	onKeyPress = noop,
 	onLinkChange,
@@ -54,6 +55,7 @@ function LinkControl( {
 
 	const closeLinkUI = () => {
 		resetInput();
+		onClose();
 	};
 
 	const resetInput = useCallback( () => {
