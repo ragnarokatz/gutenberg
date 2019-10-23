@@ -106,12 +106,11 @@ function NavigationMenuItemEdit( {
 						onClick={ () => setIsLinkOpen( ! isLinkOpen ) }
 					/>
 					{ isLinkOpen &&
-					<>
 						<LinkControl
 							className="wp-block-navigation-menu-item__inline-link-input"
+							onKeyDown={ onKeyDown }
 							onKeyPress={ ( event ) => { event.stopPropagation() } }
 						/>
-					</>
 					}
 				</Toolbar>
 			</BlockControls>
