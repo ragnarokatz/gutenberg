@@ -27,13 +27,6 @@ import {
 } from '../';
 
 const LinkControlInputSearch = ( { value, onChange, onSelect, renderSuggestions, fetchSuggestions, onReset, onKeyDown = noop, onKeyPress = noop } ) => {
-	const stopPropagationRelevantKeys = ( event ) => {
-		if ( [ LEFT, DOWN, RIGHT, UP, BACKSPACE, ENTER ].indexOf( event.keyCode ) > -1 ) {
-			// Stop the key event from propagating up to ObserveTyping.startTypingInTextField.
-			event.stopPropagation();
-		}
-	};
-
 	return (
 		<form>
 			<URLInput
@@ -41,7 +34,6 @@ const LinkControlInputSearch = ( { value, onChange, onSelect, renderSuggestions,
 				value={ value }
 				onChange={ onChange }
 				onKeyDown={ ( event, suggestion ) => {
-					stopPropagationRelevantKeys( event );
 					if ( event.keyCode === ENTER ) {
 						onSelect( suggestion )( event );
 					}
