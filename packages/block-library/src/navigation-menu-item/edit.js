@@ -23,6 +23,7 @@ import {
 	DOWN,
 	BACKSPACE,
 	ENTER,
+	ESCAPE,
 } from '@wordpress/keycodes';
 import { __ } from '@wordpress/i18n';
 import {
@@ -51,14 +52,20 @@ function NavigationMenuItemEdit( {
 
 	const inputValue = urlInput !== null ? urlInput : url;
 
-	const onKeyDown = ( event ) => {
-		if ( [ LEFT, DOWN, RIGHT, UP, BACKSPACE, ENTER ].indexOf( event.keyCode ) > -1 ) {
+	const handleLinkControlOnKeyDown = ( event ) => {
+		const { keyCode } = event;
+
+		if ( [ LEFT, DOWN, RIGHT, UP, BACKSPACE, ENTER ].indexOf( keyCode ) > -1 ) {
 			// Stop the key event from propagating up to ObserveTyping.startTypingInTextField.
 			event.stopPropagation();
 		}
+
+		if ( ESCAPE === keyCode ) {
+			closeLinkControl ();
+		}
 	};
 
-	const closeURLPopover = () => {
+	const closeLinkControl = () => {
 		setIsEditingLink( false );
 		setUrlInput( null );
 		setIsLinkOpen( false );
@@ -71,7 +78,7 @@ function NavigationMenuItemEdit( {
 		if ( autocompleteElement && autocompleteElement.contains( event.target ) ) {
 			return;
 		}
-		closeURLPopover();
+		closeLinkControl ();
 	};
 
 	const { label, url } = attributes;
@@ -108,7 +115,7 @@ function NavigationMenuItemEdit( {
 					{ isLinkOpen &&
 						<LinkControl
 							className="wp-block-navigation-menu-item__inline-link-input"
-							onKeyDown={ onKeyDown }
+							onKeyDown={ handleLinkControlOnKeyDown }
 							onKeyPress={ ( event ) => { event.stopPropagation() } }
 						/>
 					}
