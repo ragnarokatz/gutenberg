@@ -7,17 +7,8 @@ import { noop } from 'lodash';
  * WordPress dependencies
  */
 import { __ } from '@wordpress/i18n';
-import {
-	IconButton,
-} from '@wordpress/components';
-import {
-	LEFT,
-	RIGHT,
-	UP,
-	DOWN,
-	BACKSPACE,
-	ENTER,
-} from '@wordpress/keycodes';
+import { IconButton } from '@wordpress/components';
+import { ENTER } from '@wordpress/keycodes';
 
 /**
  * Internal dependencies
