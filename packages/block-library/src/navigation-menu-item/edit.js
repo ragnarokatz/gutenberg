@@ -78,7 +78,7 @@ function NavigationMenuItemEdit( {
 		if ( autocompleteElement && autocompleteElement.contains( event.target ) ) {
 			return;
 		}
-		closeLinkControl ();
+		closeLinkControl();
 	};
 
 	const { label, url } = attributes;
@@ -117,6 +117,7 @@ function NavigationMenuItemEdit( {
 							className="wp-block-navigation-menu-item__inline-link-input"
 							onKeyDown={ handleLinkControlOnKeyDown }
 							onKeyPress={ ( event ) => { event.stopPropagation() } }
+							onClose={ onFocusOutside }
 						/>
 					}
 				</Toolbar>
