@@ -26,20 +26,31 @@ import {
 	URLInput,
 } from '../';
 
-const LinkControlInputSearch = ( { value, onChange, onSelect, renderSuggestions, fetchSuggestions, onReset, onKeyDown = noop, onKeyPress = noop } ) => {
+const LinkControlInputSearch = ( {
+	value,
+    onChange,
+    onSelect,
+    renderSuggestions,
+    fetchSuggestions,
+    onReset,
+    onKeyDown,
+    onKeyPress,
+} ) => {
 	return (
-		<form>
+		<form
+			onSubmit={ event => event.preventDefault() }
+			onKeyDown={ ( event ) => {
+				if ( event.keyCode === ENTER ) {
+					// onSelect( suggestion )( event );
+				}
+				onKeyDown( event );
+			} }
+			onKeyPress={ onKeyPress }
+		>
 			<URLInput
 				className="block-editor-link-control__search-input"
 				value={ value }
 				onChange={ onChange }
-				onKeyDown={ ( event, suggestion ) => {
-					if ( event.keyCode === ENTER ) {
-						onSelect( suggestion )( event );
-					}
-					onKeyDown( event, suggestion );
-				} }
-				onKeyPress={ onKeyPress }
 				placeholder={ __( 'Search or type url' ) }
 				renderSuggestions={ renderSuggestions }
 				fetchLinkSuggestions={ fetchSuggestions }
