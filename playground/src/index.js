@@ -47,6 +47,8 @@ function App() {
 		'new-tab': false,
 	} );
 
+	const [ isVisible, setIsVisible ] = useState( true );
+
 	/* eslint-disable @wordpress/react-no-unsafe-timeout */
 	const timeout = ( ms ) => {
 		return new Promise( ( resolve ) => setTimeout( resolve, ms ) );
@@ -105,21 +107,24 @@ function App() {
 								<BlockEditorKeyboardShortcuts />
 								<WritingFlow>
 									<ObserveTyping>
-										<LinkControl
-											currentLink={ link }
-											currentSettings={ linkSettings }
-											onLinkChange={ ( theLink ) => {
-												setLink( theLink );
-											} }
-											onSettingsChange={ ( setting, value ) => {
-												setLinkSettings( {
-													...linkSettings,
-													[ setting ]: value,
-												} );
-											} }
-											fetchSearchSuggestions={ fetchFauxEntitySuggestions }
-											defaultOpen={ true }
-										/>
+										{ isVisible &&
+											<LinkControl
+												currentLink={ link }
+												currentSettings={ linkSettings }
+												onLinkChange={ ( theLink ) => {
+													setLink( theLink );
+												} }
+												onSettingsChange={ ( setting, value ) => {
+													setLinkSettings( {
+														...linkSettings,
+														[ setting ]: value,
+													} );
+												} }
+												fetchSearchSuggestions={ fetchFauxEntitySuggestions }
+												defaultOpen={ true }
+												onClose={ () => { setIsVisible( false ) } }
+											/>
+										}
 										<BlockList />
 									</ObserveTyping>
 								</WritingFlow>
