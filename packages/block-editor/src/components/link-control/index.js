@@ -49,7 +49,7 @@ function LinkControl( {
 	onLinkChange,
 	onKeyDown = noop,
 	onKeyPress = noop,
-	onSettingsChange = { noop },
+	onSettingChange = { noop },
 } ) {
 	// State
 	const [ inputValue, setInputValue ] = useState( '' );
