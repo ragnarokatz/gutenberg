@@ -6,6 +6,7 @@ import { uniqueId, random } from 'lodash';
 /**
  * WordPress dependencies
  */
+import { ESCAPE } from '@wordpress/keycodes';
 import '@wordpress/editor'; // This shouldn't be necessary
 
 import { render, useState, Fragment } from '@wordpress/element';
@@ -18,7 +19,6 @@ import {
 	LinkControl,
 } from '@wordpress/block-editor';
 import {
-	Button,
 	Popover,
 	SlotFillProvider,
 	DropZoneProvider,
@@ -87,6 +87,25 @@ function App() {
 		] );
 	};
 
+	const handleOnKeyDownEvent = ( event, suggestion ) => {
+		console.log( `onKeyDown - Key code: ${ event.keyCode }` );
+		if ( null !== suggestion ) {
+			console.log( `suggestion: ${ suggestion }` );
+		}
+
+		// Do not stop propagation for ESCAPE key
+		if ( ESCAPE === event.keyCode ) {
+			return;
+		}
+
+		event.stopPropagation();
+	};
+
+	const handleOnKeyPressEvent = ( event) => {
+		console.log( `onKeyPress - Key code: ${ event.keyCode }` );
+		event.stopPropagation();
+	};
+
 	return (
 		<Fragment>
 			<div className="playground__header">
@@ -108,22 +127,23 @@ function App() {
 								<WritingFlow>
 									<ObserveTyping>
 										{ isVisible &&
-											<LinkControl
-												currentLink={ link }
-												currentSettings={ linkSettings }
-												onLinkChange={ ( theLink ) => {
-													setLink( theLink );
-												} }
-												onSettingsChange={ ( setting, value ) => {
-													setLinkSettings( {
-														...linkSettings,
-														[ setting ]: value,
-													} );
-												} }
-												fetchSearchSuggestions={ fetchFauxEntitySuggestions }
-												defaultOpen={ true }
-												onClose={ () => { setIsVisible( false ) } }
-											/>
+										<LinkControl
+											currentLink={ link }
+											currentSettings={ linkSettings }
+											onLinkChange={ ( theLink ) => {
+												setLink( theLink );
+											} }
+											onSettingsChange={ ( setting, value ) => {
+												setLinkSettings( {
+													...linkSettings,
+													[ setting ]: value,
+												} );
+											} }
+											fetchSearchSuggestions={ fetchFauxEntitySuggestions }
+											onKeyDown={ handleOnKeyDownEvent }
+											onKeyPress={ handleOnKeyPressEvent }
+											onClose={ () => { setIsVisible( false ) } }
+										/>
 										}
 										<BlockList />
 									</ObserveTyping>
@@ -140,4 +160,7 @@ function App() {
 }
 
 registerCoreBlocks();
-render( <App />, document.querySelector( '#app' ) );
+render(
+	<App />,
+	document.querySelector( '#app' )
+);
