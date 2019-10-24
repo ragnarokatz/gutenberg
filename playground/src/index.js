@@ -19,6 +19,7 @@ import {
 	LinkControl,
 } from '@wordpress/block-editor';
 import {
+	Button,
 	Popover,
 	SlotFillProvider,
 	DropZoneProvider,
