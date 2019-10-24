@@ -138,11 +138,6 @@ class URLInput extends Component {
 	onKeyDown( event ) {
 		const { showSuggestions, selectedSuggestion, suggestions, loading } = this.state;
 
-		// Trigger `onKeyDown` event, passing the selected suggestion besides the event class.
-		if ( this.props.onKeyDown ) {
-			this.props.onKeyDown( event, selectedSuggestion );
-		}
-
 		// If the suggestions are not shown or loading, we shouldn't handle the arrow keys
 		// We shouldn't preventDefault to allow block arrow keys navigation
 		if (
@@ -184,6 +179,8 @@ class URLInput extends Component {
 			return;
 		}
 
+		const suggestion = this.state.suggestions[ this.state.selectedSuggestion ];
+
 		switch ( event.keyCode ) {
 			case UP: {
 				event.stopPropagation();
@@ -205,7 +202,7 @@ class URLInput extends Component {
 			}
 			case TAB: {
 				if ( this.state.selectedSuggestion !== null ) {
-					this.selectLink( selectedSuggestion );
+					this.selectLink( suggestion );
 					// Announce a link has been selected when tabbing away from the input field.
 					this.props.speak( __( 'Link selected.' ) );
 				}
@@ -214,7 +211,7 @@ class URLInput extends Component {
 			case ENTER: {
 				if ( this.state.selectedSuggestion !== null ) {
 					event.stopPropagation();
-					this.selectLink( selectedSuggestion );
+					this.selectLink( suggestion );
 				}
 				break;
 			}
