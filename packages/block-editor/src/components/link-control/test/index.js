@@ -3,6 +3,7 @@
  */
 import { render, unmountComponentAtNode } from 'react-dom';
 import { act, Simulate } from 'react-dom/test-utils';
+import { first, last } from 'lodash';
 
 /**
  * Internal dependencies
@@ -38,7 +39,6 @@ describe( 'Basic rendering', () => {
 		} );
 
 		// Search Input UI
-		// const searchInputLabel = Array.from( container.querySelectorAll( 'label' ) ).find( ( label ) => label.innerText === 'Search or input url' );
 		const searchInput = container.querySelector( 'input[aria-label="URL"]' );
 
 		// expect( searchInputLabel ).not.toBeNull();
@@ -48,7 +48,7 @@ describe( 'Basic rendering', () => {
 	} );
 } );
 
-describe( 'Searching', () => {
+describe( 'Searching for a link', () => {
 	it( 'should display loading UI when input is valid but search results have yet to be returned', async () => {
 		const searchTerm = 'Hello';
 
@@ -97,56 +97,9 @@ describe( 'Searching', () => {
 		expect( loadingUI ).toBeNull();
 	} );
 
-	it( 'should display search suggestions when current input value is not URL-like', async ( ) => {
-		const searchTerm = 'Hello';
-
-		act( () => {
-			render(
-				<LinkControl
-					fetchSearchSuggestions={ fetchFauxEntitySuggestions }
-				/>, container
-			);
-		} );
-
-		let searchResultElements;
-
-		// Search Input UI
-		const searchInput = container.querySelector( 'input[aria-label="URL"]' );
-
-		// TODO: select these by aria relationship to autocomplete rather than arbitary selector.
-		searchResultElements = container.querySelectorAll( '[role="menu"] button[role="menuitem"]' );
-
-		expect( searchResultElements ).toHaveLength( 0 );
-
-		// Simulate searching for a term
-		act( () => {
-			Simulate.change( searchInput, { target: { value: searchTerm } } );
-		} );
-
-		// fetchFauxEntitySuggestions resolves on next "tick" of event loop
-		await eventLoopTick();
-
-		// TODO: select these by aria relationship to autocomplete rather than arbitary selector.
-		searchResultElements = container.querySelectorAll( '[role="listbox"] [role="option"]' );
-
-		expect( searchResultElements ).toHaveLength( fauxEntitySuggestions.length );
-
-		// Reset the search term
-		act( () => {
-			Simulate.change( searchInput, { target: { value: '' } } );
-		} );
-
-		// fetchFauxEntitySuggestions resolves on next "tick" of event loop
-		await eventLoopTick();
-
-		// TODO: select these by aria relationship to autocomplete rather than arbitary selector.
-		searchResultElements = container.querySelectorAll( '[role="listbox"] [role="option"]' );
-
-		expect( searchResultElements ).toHaveLength( 0 );
-	} );
-
-	it( 'should display a single suggestion result when the current input value is URL-like', async ( ) => {
-		const searchTerm = 'http://make.wordpress.com';
+	it( 'should display only search suggestions when current input value is not URL-like', async ( ) => {
+		const searchTerm = 'Hello world';
+		const firstFauxSuggestion = first( fauxEntitySuggestions );
 
 		act( () => {
 			render(
@@ -169,16 +122,59 @@ describe( 'Searching', () => {
 
 		// TODO: select these by aria relationship to autocomplete rather than arbitary selector.
 		const searchResultElements = container.querySelectorAll( '[role="listbox"] [role="option"]' );
-		const firstSearchResultItemHTML = searchResultElements[ 0 ].innerHTML;
-		const expectedResultsLength = 1;
+		const firstSearchResultItemHTML = first( searchResultElements ).innerHTML;
+		const lastSearchResultItemHTML = last( searchResultElements ).innerHTML;
 
-		expect( searchResultElements ).toHaveLength( expectedResultsLength );
-		expect( firstSearchResultItemHTML ).toEqual( expect.stringContaining( searchTerm ) );
-		expect( firstSearchResultItemHTML ).toEqual( expect.stringContaining( 'url' ) );
+		expect( searchResultElements ).toHaveLength( fauxEntitySuggestions.length );
+
+		// Sanity check that a search suggestion shows up corresponding to the data
+		expect( firstSearchResultItemHTML ).toEqual( expect.stringContaining( firstFauxSuggestion.title ) );
+		expect( firstSearchResultItemHTML ).toEqual( expect.stringContaining( firstFauxSuggestion.type ) );
+
+		// The fallback URL suggestion should not be shown when input is not URL-like
+		expect( lastSearchResultItemHTML ).not.toEqual( expect.stringContaining( 'URL' ) );
 	} );
 
-	it( 'should reset input and search results when search term is cleared or reset', async ( ) => {
-		const searchTerm = 'Hello';
+	it.each( [
+		[ 'couldbeurlorentitysearchterm' ],
+		[ 'ThisCouldAlsoBeAValidURL' ],
+	] )( 'should display a URL suggestion as a default fallback for the search term "%s" which could potentially be a valid url.', async ( searchTerm ) => {
+		act( () => {
+			render(
+				<LinkControl
+					fetchSearchSuggestions={ fetchFauxEntitySuggestions }
+				/>, container
+			);
+		} );
+
+		// Search Input UI
+		const searchInput = container.querySelector( 'input[aria-label="URL"]' );
+
+		// Simulate searching for a term
+		act( () => {
+			Simulate.change( searchInput, { target: { value: searchTerm } } );
+		} );
+
+		// fetchFauxEntitySuggestions resolves on next "tick" of event loop
+		await eventLoopTick();
+
+		// TODO: select these by aria relationship to autocomplete rather than arbitary selector.
+		const searchResultElements = container.querySelectorAll( '[role="listbox"] [role="option"]' );
+		const lastSearchResultItemHTML = last( searchResultElements ).innerHTML;
+		const additionalDefaultFallbackURLSuggestionLength = 1;
+
+		// We should see a search result for each of the expect search suggestions
+		// plus 1 additional one for the fallback URL suggestion
+		expect( searchResultElements ).toHaveLength( fauxEntitySuggestions.length + additionalDefaultFallbackURLSuggestionLength );
+
+		// The last item should be a URL search suggestion
+		expect( lastSearchResultItemHTML ).toEqual( expect.stringContaining( searchTerm ) );
+		expect( lastSearchResultItemHTML ).toEqual( expect.stringContaining( 'URL' ) );
+		expect( lastSearchResultItemHTML ).toEqual( expect.stringContaining( 'Press ENTER to add this link' ) );
+	} );
+
+	it( 'should reset the input field and the search results when search term is cleared or reset', async ( ) => {
+		const searchTerm = 'Hello world';
 
 		act( () => {
 			render(
@@ -223,5 +219,79 @@ describe( 'Searching', () => {
 
 		expect( searchInput.value ).toBe( '' );
 		expect( searchResultElements ).toHaveLength( 0 );
+	} );
+} );
+
+describe( 'Manual link entry', () => {
+	it.each( [
+		[ 'https://make.wordpress.org' ], // explicit https
+		[ 'http://make.wordpress.org' ], // explicit http
+		[ 'www.wordpress.org' ], // usage of "www"
+	] )( 'should display a single suggestion result when the current input value is URL-like (eg: %s)', async ( searchTerm ) => {
+		act( () => {
+			render(
+				<LinkControl
+					fetchSearchSuggestions={ fetchFauxEntitySuggestions }
+				/>, container
+			);
+		} );
+
+		// Search Input UI
+		const searchInput = container.querySelector( 'input[aria-label="URL"]' );
+
+		// Simulate searching for a term
+		act( () => {
+			Simulate.change( searchInput, { target: { value: searchTerm } } );
+		} );
+
+		// fetchFauxEntitySuggestions resolves on next "tick" of event loop
+		await eventLoopTick();
+
+		// TODO: select these by aria relationship to autocomplete rather than arbitary selector.
+		const searchResultElements = container.querySelectorAll( '[role="listbox"] [role="option"]' );
+		const firstSearchResultItemHTML = searchResultElements[ 0 ].innerHTML;
+		const expectedResultsLength = 1;
+
+		expect( searchResultElements ).toHaveLength( expectedResultsLength );
+		expect( firstSearchResultItemHTML ).toEqual( expect.stringContaining( searchTerm ) );
+		expect( firstSearchResultItemHTML ).toEqual( expect.stringContaining( 'URL' ) );
+		expect( firstSearchResultItemHTML ).toEqual( expect.stringContaining( 'Press ENTER to add this link' ) );
+	} );
+
+	describe( 'Alternative link protocols and formats', () => {
+		it.each( [
+			[ 'mailto:example123456@wordpress.org', 'mailto' ],
+			[ 'tel:example123456@wordpress.org', 'tel' ],
+			[ '#internal-anchor', 'internal' ],
+		] )( 'should recognise "%s" as a %s link and handle as manual entry by displaying a single suggestion', async ( searchTerm, searchType ) => {
+			act( () => {
+				render(
+					<LinkControl
+						fetchSearchSuggestions={ fetchFauxEntitySuggestions }
+					/>, container
+				);
+			} );
+
+			// Search Input UI
+			const searchInput = container.querySelector( 'input[aria-label="URL"]' );
+
+			// Simulate searching for a term
+			act( () => {
+				Simulate.change( searchInput, { target: { value: searchTerm } } );
+			} );
+
+			// fetchFauxEntitySuggestions resolves on next "tick" of event loop
+			await eventLoopTick();
+
+			// TODO: select these by aria relationship to autocomplete rather than arbitary selector.
+			const searchResultElements = container.querySelectorAll( '[role="listbox"] [role="option"]' );
+			const firstSearchResultItemHTML = searchResultElements[ 0 ].innerHTML;
+			const expectedResultsLength = 1;
+
+			expect( searchResultElements ).toHaveLength( expectedResultsLength );
+			expect( firstSearchResultItemHTML ).toEqual( expect.stringContaining( searchTerm ) );
+			expect( firstSearchResultItemHTML ).toEqual( expect.stringContaining( searchType ) );
+			expect( firstSearchResultItemHTML ).toEqual( expect.stringContaining( 'Press ENTER to add this link' ) );
+		} );
 	} );
 } );
