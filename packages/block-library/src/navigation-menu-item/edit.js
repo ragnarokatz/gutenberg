@@ -44,6 +44,7 @@ function NavigationMenuItemEdit( {
 	isSelected,
 	isParentOfSelectedBlock,
 	setAttributes,
+	fetchSearchSuggestions,
 } ) {
 	const plainTextRef = useRef( null );
 	const [ isLinkOpen, setIsLinkOpen ] = useState( false );
@@ -118,6 +119,7 @@ function NavigationMenuItemEdit( {
 							onKeyDown={ handleLinkControlOnKeyDown }
 							onKeyPress={ ( event ) => { event.stopPropagation() } }
 							onClose={ onFocusOutside }
+							fetchSearchSuggestions={ fetchSearchSuggestions }
 						/>
 					}
 				</Toolbar>
@@ -190,10 +192,11 @@ function NavigationMenuItemEdit( {
 }
 
 export default withSelect( ( select, ownProps ) => {
-	const { hasSelectedInnerBlock } = select( 'core/block-editor' );
+	const { hasSelectedInnerBlock, getSettings } = select( 'core/block-editor' );
 	const { clientId } = ownProps;
 
 	return {
 		isParentOfSelectedBlock: hasSelectedInnerBlock( clientId, true ),
+		fetchSearchSuggestions: getSettings().__experimentalFetchLinkSuggestions,
 	};
 } )( NavigationMenuItemEdit );
